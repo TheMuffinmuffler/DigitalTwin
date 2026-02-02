@@ -1,12 +1,26 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+plt.close('all')
 # 1. Load data
 df = pd.read_csv('Data/data.csv')
+df.columns = df.columns.str.strip()
 
-# 2. Data Cleaning & Consistency
-df.columns = df.columns.str.strip() # Remove hidden spaces
+# 2. Capture the duplicates before dropping them
+# keep='first' marks all but the first occurrence as a duplicate
+duplicate_rows = df[df.duplicated(keep='first')]
+
+# Save the duplicates to a list of dictionaries (if you want a Python list)
+dropped_duplicates_list = duplicate_rows.to_dict('records')
+
+# OR Save them to a CSV file to inspect them later
+if not duplicate_rows.empty:
+    duplicate_rows.to_csv('dropped_duplicates.csv', index=False)
+    print(f"Captured {len(duplicate_rows)} duplicate rows.")
+else:
+    print("No duplicates found.")
+
+# 3. Now proceed with cleaning the main dataframe
 df = df.drop_duplicates()
 df = df.dropna()
 
@@ -46,8 +60,47 @@ for speed in unique_speeds:
 
     plt.tight_layout()
 
-    # Save the file with the speed in the name
-    plt.savefig(f'torque_at_speed_{speed}.png')
 
     # Close the plot to free up memory before moving to the next one
     plt.show()
+speed_col = 'Ship speed (v)'
+torque_col = 'Gas Turbine (GT) shaft torque (GTT) [kN m]'
+fuel_col = 'Fuel flow (mf) [kg/s]'
+
+# 2. Preparation
+unique_speeds = sorted(df[speed_col].unique())
+plt.close('all')  # Clear any lingering plots in memory/PyCharm cache
+
+# 3. Automation Loop
+for speed in unique_speeds:
+    # Filter data for this specific speed
+    speed_df = df[df[speed_col] == speed].reset_index(drop=True)
+
+    # Create a figure with 2 subplots (top and bottom)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+
+    # Plot 1: Turbine Torque
+    ax1.plot(speed_df[torque_col], color='tab:red', linewidth=1.5)
+    ax1.set_title(f'Turbine Torque at Speed {speed}')
+    ax1.set_ylabel('Torque [kN m]')
+    ax1.grid(True, linestyle='--', alpha=0.7)
+
+    # Plot 2: Fuel Flow Rate
+    ax2.plot(speed_df[fuel_col], color='tab:orange', linewidth=1.5)
+    ax2.set_title(f'Fuel Flow Rate at Speed {speed}')
+    ax2.set_ylabel('Fuel flow [kg/s]')
+    ax2.set_xlabel('Observation Index')
+    ax2.grid(True, linestyle='--', alpha=0.7)
+
+    plt.tight_layout()
+
+    # 4. Save and Clean Up
+    filename = f'torque_and_fuel_speed_{speed}.png'
+    plt.savefig(filename)
+    print(f"Generated plot for speed {speed}: {filename}")
+    plt.show()
+    # Close the figure after saving to keep the PyCharm Plot tab clean
+    plt.close(fig)
+
+# Final safety clear
+plt.close('all')
