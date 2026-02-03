@@ -1,6 +1,15 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import SVR
+from xgboost import XGBRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.ensemble import HistGradientBoostingRegressor
+
 plt.close('all')
 # 1. Load data
 df = pd.read_csv('Data/data.csv')
@@ -102,5 +111,3 @@ for speed in unique_speeds:
     # Close the figure after saving to keep the PyCharm Plot tab clean
     plt.close(fig)
 
-# Final safety clear
-plt.close('all')
