@@ -11,7 +11,6 @@ def run_all_plots(df, image_dir):
     plt.close('all')
 
     # --- 1. Correlation Matrix Heatmap ---
-    # Drop columns that are typically constant or irrelevant for correlation
     cols_to_drop = ['index', 'T1', 'P1']
     corr_df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
 
@@ -30,10 +29,11 @@ def run_all_plots(df, image_dir):
     plt.show()
 
     # --- 2. Speed-based Torque and Fuel Plots ---
-    gt_torque_col = 'Gas Turbine (GT) shaft torque (GTT) [kN m]'
-    fuel_col = 'Fuel flow (mf) [kg/s]'
+    # UPDATED: Changed [ ] to ( ) to match sanitized headers from CleaningData.py
+    gt_torque_col = 'Gas Turbine (GT) shaft torque (GTT) (kN m)'
+    fuel_col = 'Fuel flow (mf) (kg/s)'
     speed_col = 'Ship speed (v)'
-    prop_torques = ['Starboard Propeller Torque (Ts) [kN]', 'Port Propeller Torque (Tp) [kN]']
+    prop_torques = ['Starboard Propeller Torque (Ts) (kN)', 'Port Propeller Torque (Tp) (kN)']
 
     unique_speeds = sorted(df[speed_col].unique())
 
@@ -44,13 +44,13 @@ def run_all_plots(df, image_dir):
         fig1, axes1 = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
         axes1[0].plot(speed_df[gt_torque_col], color='red')
         axes1[0].set_title(f'Gas Turbine (GT) Shaft Torque at Speed {speed}')
-        axes1[0].set_ylabel('Torque [kN m]')
+        axes1[0].set_ylabel('Torque (kN m)')
         axes1[0].grid(True)
 
         axes1[1].plot(speed_df[prop_torques[0]], color='blue', label='Starboard')
         axes1[1].plot(speed_df[prop_torques[1]], color='green', linestyle='--', label='Port')
         axes1[1].set_title(f'Propeller Torques at Speed {speed}')
-        axes1[1].set_ylabel('Torque [kN]')
+        axes1[1].set_ylabel('Torque (kN)')
         axes1[1].legend()
         axes1[1].grid(True)
         plt.tight_layout()
@@ -63,12 +63,12 @@ def run_all_plots(df, image_dir):
         fig2, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
         ax1.plot(speed_df[gt_torque_col], color='tab:red', linewidth=1.5)
         ax1.set_title(f'Turbine Torque at Speed {speed}')
-        ax1.set_ylabel('Torque [kN m]')
+        ax1.set_ylabel('Torque (kN m)')
         ax1.grid(True, linestyle='--', alpha=0.7)
 
         ax2.plot(speed_df[fuel_col], color='tab:orange', linewidth=1.5)
         ax2.set_title(f'Fuel Flow Rate at Speed {speed}')
-        ax2.set_ylabel('Fuel flow [kg/s]')
+        ax2.set_ylabel('Fuel flow (kg/s)')
         ax2.set_xlabel('Observation Index')
         ax2.grid(True, linestyle='--', alpha=0.7)
 

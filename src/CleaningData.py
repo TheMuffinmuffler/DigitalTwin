@@ -2,12 +2,11 @@ import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
 
-
 def load_and_clean_data(file_path='Data/data.csv'):
     """
     Imports the data, strips column names, and removes duplicates/missing values.
+    Also sanitizes column names for compatibility with XGBoost.
     """
-    # Logic to handle running the script from either project root or src/
     if not os.path.exists(file_path) and os.path.exists(os.path.join('..', file_path)):
         file_path = os.path.join('..', file_path)
 
@@ -17,32 +16,31 @@ def load_and_clean_data(file_path='Data/data.csv'):
     # 1. Load data
     df = pd.read_csv(file_path)
 
-    # Remove trailing spaces from headers
-    df.columns = df.columns.str.strip()
+    # 2. Sanitize headers (Crucial for XGBoost)
+    # Replaces [, ], and < with characters allowed by XGBoost
+    df.columns = df.columns.str.strip().str.replace('[', '(', regex=False).str.replace(']', ')', regex=False).str.replace('<', 'less_than', regex=False)
 
-    # 2. Check for duplicates
+    # 3. Check for duplicates
     duplicate_rows = df[df.duplicated(keep='first')]
     if not duplicate_rows.empty:
         duplicate_rows.to_csv('dropped_duplicates.csv', index=False)
         print(f"Captured {len(duplicate_rows)} duplicate rows to 'dropped_duplicates.csv'.")
 
-    # 3. Clean the data
+    # 4. Clean the data
     df = df.drop_duplicates()
     df = df.dropna()
 
     print("Data cleaning complete.")
     return df
 
-
 def split_and_save_data(df, data_folder='Data'):
     """
     Splits the dataframe into 30% training and 70% testing sets and saves them as CSVs.
     """
-    # Adjust path if script is run from inside src/
     if not os.path.exists(data_folder) and os.path.exists(os.path.join('..', data_folder)):
         data_folder = os.path.join('..', data_folder)
 
-    # Perform the split (test_size=0.7 for 70% testing)
+    # Perform the split
     train_df, test_df = train_test_split(df, test_size=0.70, random_state=42)
 
     # Define file paths
