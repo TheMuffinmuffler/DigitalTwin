@@ -1,14 +1,18 @@
 import matplotlib.pyplot as plt
 import os
-from CleaningData import load_and_clean_data
+from CleaningData import load_and_clean_data, split_and_save_data
 
 
 def run_analysis():
-    # 1. Load and clean the data
+    # 1. Load and clean the main data
     df = load_and_clean_data()
 
-    # 2. Define path for the images folder
-    # We want 'images' to be at the same level as 'src' and 'Data'
+    # 2. Create the training (30%) and testing (70%) CSV files
+    # This will save train.csv and test.csv into your Data/ folder
+    train_df, test_df = split_and_save_data(df)
+
+    # 3. Define path for the images folder
+    # This ensures images are saved at the same level as src and Data
     if os.path.basename(os.getcwd()) == 'src':
         image_dir = os.path.join('..', 'images')
     else:
@@ -19,7 +23,7 @@ def run_analysis():
         os.makedirs(image_dir)
         print(f"Created directory: {image_dir}")
 
-    # Column definitions
+    # Column definitions for plotting
     gt_torque_col = 'Gas Turbine (GT) shaft torque (GTT) [kN m]'
     fuel_col = 'Fuel flow (mf) [kg/s]'
     speed_col = 'Ship speed (v)'
@@ -29,6 +33,7 @@ def run_analysis():
     plt.close('all')
 
     for speed in unique_speeds:
+        # Filter data for the specific speed
         speed_df = df[df[speed_col] == speed].reset_index(drop=True)
 
         # --- Plot 1: GT Torque & Propeller Torques ---
