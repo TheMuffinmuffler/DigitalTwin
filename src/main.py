@@ -5,52 +5,53 @@ import matplotlib.pyplot as plt
 from CleaningData import load_and_clean_data, split_and_save_data
 from Plots import run_all_plots
 
-# 1. Setup paths to include the models folder
+# Setup paths
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-models_path = os.path.join(project_root, 'models')
-if models_path not in sys.path:
-    sys.path.append(models_path)
+sys.path.append(os.path.join(project_root, 'models'))
 
-# 2. Imports from your local modules
-# Ensure these filenames match your .py files exactly (e.g., Gradientboosting.py)
 from Random_forest import train_random_forest
 from Gradientboosting import train_gradient_boosting
 from SVM import train_svm
 
 
 def main():
-    # --- 1. Prepare Data ---
     df = load_and_clean_data()
     split_and_save_data(df)
 
-    # --- 2. Define Paths ---
     if os.path.basename(os.getcwd()) == 'src':
-        train_path = os.path.join('..', 'Data', 'train.csv')
-        image_dir = os.path.join('..', 'images')
+        train_path, test_path = '../Data/train.csv', '../Data/test.csv'
+        image_dir = '../images'
     else:
-        train_path = os.path.join('Data', 'train.csv')
+        train_path, test_path = 'Data/train.csv', 'Data/test.csv'
         image_dir = 'images'
 
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
-
-    # --- 3. Run Plotting ---
-    print("Starting plotting process...")
+    # Run Analysis Plots
     run_all_plots(df, image_dir)
-    print("Plotting tasks completed successfully.")
 
-    # --- 4. Run Machine Learning Models (Training Data Only) ---
-    print("\n--- Training Models on 30% Training Set ---")
+    # Run ML Models and collect metrics
+    print("\n--- Comparing Train vs Test Performance ---")
+    results = [
+        train_random_forest(train_path, test_path, image_dir),
+        train_gradient_boosting(train_path, test_path, image_dir),
+        train_svm(train_path, test_path, image_dir)
+    ]
 
-    # Passing the newly defined train_path and image_dir to your functions
-    rf_results = train_random_forest(train_path, image_dir)
-    gb_results = train_gradient_boosting(train_path, image_dir)
-    svm_results = train_svm(train_path, image_dir)
+    # Create Comparison Table
+    comparison_df = pd.DataFrame(results)
+    print("\n", comparison_df)
 
-    # --- 5. Performance Summary ---
-    results_df = pd.DataFrame([rf_results, gb_results, svm_results])
-    print("\nTraining Performance Summary:")
-    print(results_df)
+    # Generate Comparison Graph
+    comparison_df.set_index('Model')[['Train R2', 'Test R2']].plot(kind='bar', figsize=(10, 6))
+    plt.title('R2 Score Comparison: Training vs. Testing')
+    plt.ylabel('R2 Score')
+    plt.ylim(0, 1.1)
+    plt.xticks(rotation=0)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+    save_path = os.path.join(image_dir, 'model_performance_comparison.png')
+    plt.savefig(save_path)
+    print(f"\nComparison graph saved to {save_path}")
+    plt.show()
 
 
 if __name__ == "__main__":
